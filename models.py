@@ -36,6 +36,8 @@ class PerceptronModel(Module):
         Hint: You can use ones(dim) to create a tensor of dimension dim.
         """
         super(PerceptronModel, self).__init__()
+        self.dimensions = dimensions
+        self.w = Parameter((ones(1, dimensions)))
         
         "*** YOUR CODE HERE ***"
         
@@ -57,6 +59,7 @@ class PerceptronModel(Module):
         The pytorch function `tensordot` may be helpful here.
         """
         "*** YOUR CODE HERE ***"
+        return torch.matmul(x, self.w.T)
         
 
     def get_prediction(self, x):
@@ -66,8 +69,7 @@ class PerceptronModel(Module):
         Returns: 1 or -1
         """
         "*** YOUR CODE HERE ***"
-
-
+        return torch.where(self.run(x) >= 0, 1, -1)
 
     def train(self, dataset):
         """
@@ -79,8 +81,21 @@ class PerceptronModel(Module):
         is the item we need to predict based off of its features.
         """        
         with no_grad():
-            dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
             "*** YOUR CODE HERE ***"
+            while True:
+                bad_predictions = 0
+                dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
+
+                for batch in dataloader:
+                    x_train = batch["x"]
+                    y_train = batch["label"]
+                    prediction = self.get_prediction(x_train)
+                    if prediction != y_train: 
+                        bad_predictions += 1
+                        self.w += y_train* x_train
+
+                if bad_predictions == 0:
+                    break
 
 
 
