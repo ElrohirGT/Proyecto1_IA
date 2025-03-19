@@ -168,13 +168,25 @@ class DigitClassificationModel(Module):
         input_size = 28 * 28
         output_size = 10
 
+        # Intermedia (epoch ~ 50)
         # self.fc1 = Linear(input_size, int(input_size * 3.0 / 4.0))
         # self.fc2 = Linear(int(input_size * 3.0 / 4.0), int(input_size / 2.0))
         # self.fc3 = Linear(int(input_size / 2.0), output_size)
 
-        self.fc1 = Linear(input_size, 1024)
-        self.fc2 = Linear(1024, 512)
-        self.fc3 = Linear(512, output_size)
+        # La más rápida (epoch ~ 26)
+        self.fc1 = Linear(input_size, 512)
+        self.fc2 = Linear(512, 256)
+        self.fc3 = Linear(256, output_size)
+
+        # La más lenta (Nunca llega, epoch > 120)
+        # self.fc1 = Linear(input_size, 128)
+        # self.fc2 = Linear(128, 81)
+        # self.fc3 = Linear(81, output_size)
+
+        # La más lenta (Nunca llega, epoch > 120)
+        # self.fc1 = Linear(input_size, 64)
+        # self.fc2 = Linear(64, 32)
+        # self.fc3 = Linear(32, output_size)
 
     def run(self, x):
         """
@@ -222,7 +234,6 @@ class DigitClassificationModel(Module):
         """
         Trains the model.
         """
-        # learningRate = 1e-2
         # optimizer = optim.Adam(self.parameters(), lr=learningRate)
         # print(dataset)
         dataloader = DataLoader(dataset, batch_size=20000, shuffle=True)
@@ -233,7 +244,9 @@ class DigitClassificationModel(Module):
         #     y_batch = batch["label"]
         #     break
 
-        optimizer = optim.Adam(self.parameters())
+        # learningRate = 1e-5 # default
+        learningRate = 1e-2
+        optimizer = optim.Adam(self.parameters(), lr=learningRate)
 
         prevAcc = -1
         accuracy = -50
