@@ -81,15 +81,17 @@ class PerceptronModel(Module):
             "*** YOUR CODE HERE ***"
             while True:
                 bad_predictions = 0
-                dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
+                dataloader = DataLoader(dataset, batch_size=5, shuffle=True)
 
                 for batch in dataloader:
                     x_train = batch["x"]
                     y_train = batch["label"]
+
                     prediction = self.get_prediction(x_train)
-                    if prediction != y_train:
+                    if not torch.equal(prediction, y_train):
+                        update = (y_train * x_train).mean(dim=0, keepdim=True)
                         bad_predictions += 1
-                        self.w += y_train * x_train
+                        self.w += update
 
                 if bad_predictions == 0:
                     break
