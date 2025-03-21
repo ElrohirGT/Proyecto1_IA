@@ -106,6 +106,10 @@ class RegressionModel(Module):
         # Initialize your model parameters here
         "*** YOUR CODE HERE ***"
         super().__init__()
+        self.fc1 = Linear(1, 128)
+        self.fc2 = Linear(128, 128)
+        self.fc3 = Linear(128, 128)
+        self.fc4 = Linear(128, 1)
 
     def forward(self, x):
         """
@@ -117,6 +121,11 @@ class RegressionModel(Module):
             A node with shape (batch_size x 1) containing predicted y-values
         """
         "*** YOUR CODE HERE ***"
+        x = relu(self.fc1(x))
+        x = relu(self.fc2(x))
+        x = relu(self.fc3(x))
+        x = self.fc4(x)
+        return x
 
     def get_loss(self, x, y):
         """
@@ -129,22 +138,65 @@ class RegressionModel(Module):
         Returns: a tensor of size 1 containing the loss
         """
         "*** YOUR CODE HERE ***"
+        predictions = self(x)
+        loss = mse_loss(predictions, y)
+        return loss
 
     def train(self, dataset):
         """
         Trains the model.
 
-        In order to create batches, create a DataLoader object and pass in `dataset` as well as your required
+        # Get predictions: (batch_size, 1)DataLoader object and pass in `dataset` as well as your required
+        In order to create batches, create a
         batch size. You can look at PerceptronModel as a guideline for how you should implement the DataLoader
 
         Each sample in the dataloader object will be in the form {'x': features, 'label': label} where label
         is the item we need to predict based off of its features.
-
+  # Get predictions: (batch_size, 1)
         Inputs:
             dataset: a PyTorch dataset object containing data to be trained on
 
         """
         "*** YOUR CODE HERE ***"
+        from torch.utils.data import DataLoader
+
+        batch_size = 32
+        dataloader = DataLoader(
+            dataset, batch_size=batch_size, shuffle=True)
+
+        optimizer = optim.Adam(self.parameters(), lr=0.001)
+
+        num_epochs = 500
+        target_loss = 0.001
+        for epoch in range(num_epochs):
+            total_loss = 0
+            num_batches = 0
+            for batch in dataloader:
+                x = batch['x']
+                y = batch['label']
+
+                if x.dim() == 1:
+                    x = x.view(-1, 1)
+                if y.dim() == 1:
+                    y = y.view(-1, 1)
+
+                optimizer.zero_grad()
+                loss = self.get_loss(x, y)
+                loss.backward()
+                optimizer.step()
+
+                total_loss += loss.item()
+                num_batches += 1
+
+            avg_loss = total_loss / num_batches
+            if (epoch + 1) % 50 == 0:
+                print(
+                    f'Epoch [{epoch+1}/{num_epochs}], Average Loss: {avg_loss:.6f}')
+
+            if avg_loss < target_loss:
+                print(f'Stopping early at epoch {
+                      epoch+1} with average loss {avg_loss:.6f}')
+                break
 
 
 class DigitClassificationModel(Module):
@@ -274,7 +326,8 @@ class DigitClassificationModel(Module):
             else:
                 repeatedCount = 1
             print(
-                f"Epoch {epoch}, Loss: {total_loss:.4f}, Accuracy: {accuracy*100:.4f}%"
+                f"Epoch {epoch}, Loss: {
+                    total_loss:.4f}, Accuracy: {accuracy*100:.4f}%"
             )
             epoch += 1
             shouldStop = accuracy >= accLimit or repeatedCount == maxRepeatedCount
